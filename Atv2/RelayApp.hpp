@@ -16,7 +16,7 @@ private:
 
     int index;
     Ptr<Node> node;
-    bool is_running;
+    //bool is_running;
 
     bool is_edge;
     Ptr<Socket> sender_socket;

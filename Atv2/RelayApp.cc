@@ -1,4 +1,4 @@
-#include "RelayApp.hpp"
+
 #include "ns3/core-module.h"
 #include "ns3/tcp-socket-factory.h"
 #include "ns3/applications-module.h"
@@ -6,17 +6,19 @@
 #include "ns3/string.h"
 #include "ns3/double.h"
 #include "ns3/log.h"
+
 #include <netinet/in.h>
+#include "RelayApp.hpp"
 
 NS_LOG_COMPONENT_DEFINE("Atv2");
 using namespace ns3;
 
 RelayApp::RelayApp () : 
-    is_running (false),
     is_edge (false),
     sender_socket (0),
     receiver_socket (0)
 {
+    return;
 }
 
 RelayApp::~RelayApp ()
@@ -29,9 +31,8 @@ TypeId
 RelayApp::GetTypeId (void)
 {
     static TypeId tid = TypeId ("RelayApp")
-    .SetParent<Application> ()
-    .AddConstructor<RelayApp> ()
-    ;
+        .SetParent<Application>()
+        .AddConstructor<RelayApp>();
     return tid;
 }
 
@@ -49,7 +50,6 @@ RelayApp::Setup (int index, Ptr<Node> node, bool is_edge,
 void
 RelayApp::StartApplication (void)
 {
-    is_running = true;
     Time dropTime = Seconds(30.0);
     Simulator::Schedule(dropTime, &RelayApp::StopApplication, this); 
 
@@ -84,8 +84,6 @@ RelayApp::StartApplication (void)
 void
 RelayApp::StopApplication(void)
 {
-    this->is_running = false;
-
     if (this->receiver_socket)
     {
         this->receiver_socket->Close();
@@ -100,12 +98,14 @@ RelayApp::StopApplication(void)
     NS_LOG_UNCOND("Aplicação encerrada");
 }
 
-void RelayApp::OnAccept(Ptr<Socket> s, const Address& from)
+void
+RelayApp::OnAccept(Ptr<Socket> s, const Address& from)
 {
     s->SetRecvCallback(MakeCallback(&RelayApp::OnReceive, this));
 }
 
-void RelayApp::OnReceive(Ptr<Socket> socket)
+void
+RelayApp::OnReceive(Ptr<Socket> socket)
 {
     Address from;
     Ptr<Packet> packet;
@@ -123,7 +123,7 @@ void RelayApp::OnReceive(Ptr<Socket> socket)
         InetSocketAddress inetFrom = InetSocketAddress::ConvertFrom(from);
         packet->CopyData((uint8_t *)&networkOrderNumber, sizeof(networkOrderNumber));
         receivedNumber = ntohl(networkOrderNumber);
-        NS_LOG_INFO("Numero Recebido: " << receivedNumber);
+        NS_LOG_INFO("[" << this->index << "] Numero Recebido: " << receivedNumber);
 
         if (this->is_edge) {
             receivedNumber = 1 + rand() % 100;
@@ -148,7 +148,7 @@ RelayApp::SendPacket (int32_t number)
     int32_t networkOrderNumber = htonl(number);
     Ptr<Packet> packet = Create<Packet>((uint8_t *)&networkOrderNumber, sizeof(networkOrderNumber));
     this->sender_socket->Send(packet);
-    NS_LOG_INFO("nó "<< this->index << " manda " << number);
+    NS_LOG_DEBUG("Sending " << number);
     sender_socket->Close();
 }
 
@@ -161,22 +161,23 @@ RelayApp::Connect (Ipv4Address neighbor_address)
     );
     InetSocketAddress remote = InetSocketAddress(neighbor_address, this->k_receiver_port);
     this->sender_socket->Connect(remote);
-    NS_LOG_INFO("nó "<< this->index << " conecta com " << neighbor_address);
+    NS_LOG_DEBUG("Node "<< this->index << " linked with " << neighbor_address);
 }
 
-// Callback para conexão bem-sucedida
-void RelayApp::OnConnectionSucceeded(Ptr<Socket> socket)
+void
+RelayApp::OnConnectionSucceeded(Ptr<Socket> socket)
 {
-    NS_LOG_INFO("Conexão bem-sucedida");
+    NS_LOG_DEBUG("Connected");
 }
 
-// Callback para falha de conexão
-void RelayApp::OnConnectionFailed(Ptr<Socket> socket)
+void
+RelayApp::OnConnectionFailed(Ptr<Socket> socket)
 {
-    NS_LOG_INFO("Falha na conexão");
+    NS_LOG_DEBUG("Failed to connect");
 }
 
-bool RelayApp::OnConnectionRequested(Ptr<Socket> socket, const Address& from) {
-    NS_LOG_INFO("Conexão solicitada de: " << from);
+bool
+RelayApp::OnConnectionRequested(Ptr<Socket> socket, const Address& from) {
+    NS_LOG_DEBUG("Connection request by " << from);
     return true;
 }
