@@ -47,15 +47,11 @@ RelayApp::Setup (int index, Ptr<Node> node, bool is_edge,
     this->left_address = left_address;
     this->is_edge = is_edge;
     this->velocity = START_VELOCITY;
-    this->has_send_msg = false;
 }
 
 void
 RelayApp::StartApplication (void)
 {
-    Time dropTime = Seconds(30.0);
-    Simulator::Schedule(dropTime, &RelayApp::StopApplication, this); 
-
     Ptr<Socket> receiver_socket = Socket::CreateSocket(
         this->node, TcpSocketFactory::GetTypeId ()
     );
@@ -77,6 +73,9 @@ RelayApp::StartApplication (void)
     this->receiver_socket = receiver_socket;
     this->sender_socket = sender_socket;
 
+    if(this->index != 0){
+        Connect(this->left_address);
+    }
     if(this->index == 4){
         GenVelocity();
     }
@@ -90,17 +89,7 @@ RelayApp::GenVelocity()
     NS_LOG_INFO("Nova velocidade: " << this->velocity);
     UpdateVelocity();
     
-    Connect(this->left_address);
     SendPacket();
-
-    if(has_send_msg)
-    {
-        NS_LOG_DEBUG("Try sending again the new velocity");
-        Connect(this->left_address);
-        SendPacket();
-    }
-    this->has_send_msg = true;
-
     Simulator::Schedule(Seconds(DELAY_TIME), &RelayApp::GenVelocity, this);
 }
 
@@ -126,7 +115,7 @@ RelayApp::StopApplication(void)
         this->sender_socket->Close();
         this->sender_socket = nullptr;
     }
-    NS_LOG_UNCOND("Aplicação encerrada");
+    NS_LOG_DEBUG("End of app");
 }
 
 void
@@ -171,7 +160,7 @@ RelayApp::SendPacket ()
     Ptr<Packet> packet = Create<Packet>((uint8_t *)&networkOrderNumber, sizeof(networkOrderNumber));
     this->sender_socket->Send(packet);
     NS_LOG_DEBUG("Sending " << velocity);
-    this->sender_socket->Close();
+    //this->sender_socket->Close();
 }
 
 void
@@ -183,8 +172,8 @@ RelayApp::Connect (Ipv4Address neighbor_address)
         MakeCallback(&RelayApp::OnConnectionFailed, this)
     );
     InetSocketAddress remote = InetSocketAddress(neighbor_address, this->k_receiver_port);
-    if(this->sender_socket->Connect(remote) == 0)
-        NS_LOG_DEBUG("Node "<< this->index << " linked with " << neighbor_address);
+    this->sender_socket->Connect(remote);
+    //NS_LOG_DEBUG("Node "<< this->index << " linked with " << neighbor_address);
 }
 
 void

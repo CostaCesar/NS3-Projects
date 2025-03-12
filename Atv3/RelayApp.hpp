@@ -18,13 +18,9 @@ private:
 
     int index;
     Ptr<Node> node;
-
     int32_t velocity;
-    bool has_send_msg;
-
-    //bool is_running;
-
     bool is_edge;
+
     Ptr<Socket> sender_socket;
     Ptr<Socket> receiver_socket;
     Ipv4Address left_address;
