@@ -4,7 +4,7 @@
 using namespace ns3;
 #define NUM_NODES (5)
 #define START_TIME_S (1.0)
-#define END_TIME_S (30.0)
+#define END_TIME_S (5.0)
 
 
 //NS_LOG_COMPONENT_DEFINE("RelayNode");

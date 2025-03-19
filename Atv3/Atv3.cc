@@ -10,7 +10,6 @@
 #include "ns3/yans-wifi-channel.h"
 #include "ns3/yans-wifi-helper.h"
 #include "ns3/ipv4-address-helper.h"
-#include "ns3/netanim-module.h"
 
 using namespace ns3;
 //NS_LOG_COMPONENT_DEFINE("Atv2");
@@ -53,7 +52,6 @@ int main(int argc, char const *argv[])
     Ipv4InterfaceContainer interfaces = ipv4.Assign(devices);
 
     // Application
-    std::cout << "HERE" << std::endl;
     for(int i = 0; i < NUM_NODES; i++)
     {
         Ptr<RelayApp> app = CreateObject<RelayApp>();
@@ -81,13 +79,6 @@ int main(int argc, char const *argv[])
     Ipv4GlobalRoutingHelper::PopulateRoutingTables();
     
     Time stop_time = Seconds(END_TIME_S);
-    AnimationInterface anim("atividade3.xml");
-    anim.EnableIpv4RouteTracking (
-        "atividade3_routes.xml", 
-        Seconds(0.5),
-        Seconds(29.0)
-    );
-    anim.SetMaxPktsPerTraceFile(10000000);
     
     Simulator::Stop(stop_time);
     Simulator::Run();
